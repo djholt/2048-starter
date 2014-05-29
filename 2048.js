@@ -64,6 +64,23 @@ var addRandomTile = function () {
   }
 };
 
+var getNumbersInCol = function (col) {
+  var numbers = [];
+  for (var row = 0; row < size; row++) {
+    var number = board[tileKey(col, row)];
+    if (number) {
+      numbers.push(number);
+    }
+  }
+  return numbers;
+};
+
+var setNumbersInCol = function (col, newNumbers) {
+  for (var row = 0; row < size; row++) {
+    board[tileKey(col, row)] = newNumbers[row];
+  }
+};
+
 var getNumbersInRow = function (row) {
   var numbers = [];
   for (var col = 0; col < size; col++) {
@@ -81,17 +98,67 @@ var setNumbersInRow = function (row, newNumbers) {
   }
 };
 
-var smashRowLeft = function (row) {
-  var numbers = getNumbersInRow(row);
-  while (numbers.length < size) {
-    numbers.push(0);
+var smashNumbers = function (oldNumbers) {
+  var newNumbers = [];
+  while (oldNumbers.length > 1) {
+    if (oldNumbers[0] === oldNumbers[1]) {
+      var a = oldNumbers.shift();
+      var b = oldNumbers.shift();
+      newNumbers.push(a + b);
+    } else {
+      var a = oldNumbers.shift();
+      newNumbers.push(a);
+    }
   }
-  setNumbersInRow(row, numbers);
+  if (oldNumbers.length > 0) {
+    var a = oldNumbers.shift();
+    newNumbers.push(a);
+  }
+  while (newNumbers.length < size) {
+    newNumbers.push(0);
+  }
+  return newNumbers;
 };
 
-var keyPressed = function () {
-  for (var row = 0; row < size; row++) {
-    smashRowLeft(row);
+var smashNumbersInReverse = function (oldNumbers) {
+  // use smashNumbers() and reverse()
+};
+
+var smashRowLeft = function (row) {
+  var oldNumbers = getNumbersInRow(row);
+  var newNumbers = smashNumbers(oldNumbers);
+  setNumbersInRow(row, newNumbers);
+};
+
+var smashRowRight = function (row) {
+  var oldNumbers = getNumbersInRow(row);
+  var newNumbers = smashNumbersInReverse(oldNumbers);
+  setNumbersInRow(row, newNumbers);
+};
+
+var smashColUp = function (col) {
+  var oldNumbers = getNumbersInCol(col);
+  var newNumbers = smashNumbers(oldNumbers);
+  setNumbersInCol(col, newNumbers);
+};
+
+var smashColDown = function (col) {
+  var oldNumbers = getNumbersInCol(col);
+  var newNumbers = smashNumbersInReverse(oldNumbers);
+  setNumbersInCol(col, newNumbers);
+};
+
+var keyPressed = function (key) {
+  for (var n = 0; n < size; n++) {
+    if (key == "left") {
+      smashRowLeft(n);
+    } else if (key == "right") {
+      smashRowRight(n);
+    } else if (key == "up") {
+      smashColUp(n);
+    } else if (key == "down") {
+      smashColDown(n);
+    }
   }
   refreshBoard();
 };
@@ -103,8 +170,27 @@ $(document).ready(function () {
   refreshBoard();
 
   $(document).keydown(function (event) {
-    if (event.which == 37) { // left key pressed
-      keyPressed();
+    switch (event.which) {
+      case 37: // left
+      case 65: // a
+      case 72: // h
+        keyPressed("left");
+        break;
+      case 38: // up
+      case 87: // w
+      case 75: // k
+        keyPressed("up");
+        break;
+      case 39: // right
+      case 68: // d
+      case 76: // l
+        keyPressed("right");
+        break;
+      case 40: // down
+      case 83: // s
+      case 74: // j
+        keyPressed("down");
+        break;
     }
   });
 });
