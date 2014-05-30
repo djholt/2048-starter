@@ -1,8 +1,36 @@
 var board = {};
+var score = 0;
+var bestScore = 0;
 var size = 4;
 
 var tileKey = function (col, row) {
   return "tile" + col + "-" + row;
+};
+
+var updateScore = function () {
+  $("#current-score").text(score);
+  $("#best-score").text(bestScore);
+};
+
+var resetScore = function () {
+  score = 0;
+  updateScore();
+};
+
+var incrementScore = function (addToScore) {
+  score += addToScore;
+  if (bestScore < score) {
+    bestScore = score;
+  }
+  updateScore();
+  animateScore(addToScore);
+};
+
+var animateScore = function (addedScore) {
+  // create a new div
+  // put addedScore into the div
+  // put it in the right spot
+  // animate it (fly AND disappear!)
 };
 
 var createBoard = function () {
@@ -105,6 +133,7 @@ var smashNumbers = function (oldNumbers) {
       var a = oldNumbers.shift();
       var b = oldNumbers.shift();
       newNumbers.push(a + b);
+      incrementScore(a + b);
     } else {
       var a = oldNumbers.shift();
       newNumbers.push(a);
@@ -121,7 +150,7 @@ var smashNumbers = function (oldNumbers) {
 };
 
 var smashNumbersInReverse = function (oldNumbers) {
-  // use smashNumbers() and reverse()
+  return smashNumbers(oldNumbers.reverse()).reverse();
 };
 
 var smashRowLeft = function (row) {
@@ -148,7 +177,20 @@ var smashColDown = function (col) {
   setNumbersInCol(col, newNumbers);
 };
 
+var boardChanged = function (oldBoard) {
+  for (var row = 0; row < size; row++) {
+    for (var col = 0; col < size; col++) {
+      var key = tileKey(col, row);
+      if (board[key] != oldBoard[key]) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 var keyPressed = function (key) {
+  var oldBoard = $.extend({}, board);
   for (var n = 0; n < size; n++) {
     if (key == "left") {
       smashRowLeft(n);
@@ -160,14 +202,28 @@ var keyPressed = function (key) {
       smashColDown(n);
     }
   }
+  if (boardChanged(oldBoard)) {
+    addRandomTile();
+  }
   refreshBoard();
+};
+
+var newGame = function () {
+  board = {};
+  addRandomTile();
+  addRandomTile();
+  refreshBoard();
+  resetScore();
 };
 
 $(document).ready(function () {
   createBoard();
-  addRandomTile();
-  addRandomTile();
-  refreshBoard();
+  newGame();
+
+  $("#new-game").click(function (event) {
+    event.preventDefault();
+    newGame();
+  });
 
   $(document).keydown(function (event) {
     switch (event.which) {
